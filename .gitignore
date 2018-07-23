@@ -1,0 +1,14 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs/SunOrMoon/v15
+/Debug
+/PNG/Debug
+/PNG/Release
+/PNG/test.png
+/PNG/test.bin
+/PNG/.test.bin.swp
+/Release
+/SunOrMoon/Debug
+/SunOrMoon/Release
