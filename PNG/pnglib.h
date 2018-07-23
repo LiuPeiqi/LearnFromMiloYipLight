@@ -55,14 +55,46 @@ namespace lpq {
 		static const unsigned t[] = { 0, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
 			/* CRC32 Table */    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c };
 		unsigned a = 1, b = 0, c, p = w * image.channel_size + 1, x, y, i;   /* ADLER-a, ADLER-b, CRC, pitch */
-#define SVPNG_U32(u) do { SVPNG_PUT((u) >> 24); SVPNG_PUT(((u) >> 16) & 255); SVPNG_PUT(((u) >> 8) & 255); SVPNG_PUT((u) & 255); } while(0)
-#define SVPNG_U8C(u) do { SVPNG_PUT(u); c ^= (u); c = (c >> 4) ^ t[c & 15]; c = (c >> 4) ^ t[c & 15]; } while(0)
-#define SVPNG_U8AC(ua, l) for (i = 0; i < l; i++) SVPNG_U8C((ua)[i])
-#define SVPNG_U16LC(u) do { SVPNG_U8C((u) & 255); SVPNG_U8C(((u) >> 8) & 255); } while(0)
-#define SVPNG_U32C(u) do { SVPNG_U8C((u) >> 24); SVPNG_U8C(((u) >> 16) & 255); SVPNG_U8C(((u) >> 8) & 255); SVPNG_U8C((u) & 255); } while(0)
-#define SVPNG_U8ADLER(u) do { SVPNG_U8C(u); a = (a + (u)) % 65521; b = (b + a) % 65521; } while(0)
-#define SVPNG_BEGIN(s, l) do { SVPNG_U32(l); c = ~0U; SVPNG_U8AC(s, 4); } while(0)
-#define SVPNG_END() SVPNG_U32(~c)
+		auto SVPNG_U32C = [&](auto u) {
+			SVPNG_PUT(u >> 24);
+			SVPNG_PUT((u >> 16) & 255);
+			SVPNG_PUT((u >> 8) & 255);
+			SVPNG_PUT(u & 255);
+		};
+		auto SVPNG_U8C = [&](auto u) {
+			SVPNG_PUT(u);
+			c ^= u;
+			c = (c >> 4) ^ t[c & 15];
+			c = (c >> 4) ^ t[c & 15];
+		};
+		auto SVPNG_U8AC = [&](auto ua, auto l) {
+			for (int i = 0; i < l; ++i) {
+				SVPNG_U8C(ua[i]);
+			}
+		};
+		auto SVPNG_U16LC = [&](auto u) {
+			SVPNG_U8C(u & 255);
+			SVPNG_U8C((u >> 8) & 255);
+		};
+		auto SVPNG_U32U = [&](auto u) {
+			SVPNG_U8C(u >> 24);
+			SVPNG_U8C((u >> 16) & 255);
+			SVPNG_U8C((u >> 8) & 255);
+			SVPNG_U8C(u & 255);
+		};
+		auto SVPNG_U8ADLER = [&](auto u){
+			SVPNG_U8C(u);
+			a = (a + u) % 65521;
+			b = (b + a) % 65521;
+		};
+		auto SVPNG_BEGIN = [&](auto s, auto l) {
+			SVPNG_U32C(l);
+			c = ~0U;
+			SVPNG_U8AC(s, 4);
+		};
+		auto SVPNG_END = [&]() {
+			SVPNG_U32C(~c);
+		};
 		out << "\x89PNG\r\n\32\n";	                /* Magic */
 		SVPNG_BEGIN("IHDR", 13);                    /* IHDR chunk { */
 		SVPNG_U32C(w); SVPNG_U32C(h);               /*   Width & Height (8 bytes) */
