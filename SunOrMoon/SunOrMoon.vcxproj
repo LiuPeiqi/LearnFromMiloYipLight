@@ -122,6 +122,9 @@
     <ClCompile Include="Sun.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Light\Light.vcxproj">
+      <Project>{d038d68c-fc9f-401e-ab0e-ccecea4f57ce}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\PNG\PNG.vcxproj">
       <Project>{42472b1f-1456-45f4-918b-eeaebef847ff}</Project>
     </ProjectReference>

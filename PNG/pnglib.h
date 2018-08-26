@@ -54,7 +54,7 @@ namespace lpq {
 		auto SVPNG_PUT = [&](unsigned char c) {out << c; };
 		static const unsigned t[] = { 0, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
 			/* CRC32 Table */    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c };
-		unsigned a = 1, b = 0, c, p = w * image.channel_size + 1, x, y, i;   /* ADLER-a, ADLER-b, CRC, pitch */
+		unsigned a = 1, b = 0, c, p = w * image.channel_size + 1, x, y;   /* ADLER-a, ADLER-b, CRC, pitch */
 		auto SVPNG_U32C = [&](auto u) {
 			SVPNG_PUT(u >> 24);
 			SVPNG_PUT((u >> 16) & 255);
@@ -104,7 +104,7 @@ namespace lpq {
 		SVPNG_BEGIN("IDAT", 2 + h * (5 + p) + 4);   /* IDAT chunk { */
 		SVPNG_U8AC("\x78\1", 2);                    /*   Deflate block begin (2 bytes) */
 		for (y = 0; y < h; y++) {                   /*   Each horizontal line makes a block for simplicity */
-			SVPNG_U8C(y == h - 1);                  /*   1 for the last block, 0 for others (1 byte) */
+			SVPNG_U8C(static_cast<unsigned char>(y == h - 1));                  /*   1 for the last block, 0 for others (1 byte) */
 			SVPNG_U16LC(p); SVPNG_U16LC(~p);        /*   Size of block in little endian and its 1's complement (4 bytes) */
 			SVPNG_U8ADLER(0);                       /*   No filter prefix (1 byte) */
 			for (x = 0; x < p - 1; x++, img++)

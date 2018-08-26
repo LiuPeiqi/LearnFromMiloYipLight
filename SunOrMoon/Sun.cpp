@@ -2,51 +2,13 @@
 
 #include <string>
 #include <iostream>
-#include <cmath>
-#include <random>
 #include <thread>
-#include <mutex>
-#include <atomic>
 #include <vector>
 #include <chrono>
+#include <functional>
+
 #include "../PNG/pnglib.h"
-
-const float PI = 3.1415926535;
-const float TOW_PI = PI * 2.0f;
-
-float Trace(float x, float y, float dx, float dy) {
-	const size_t MAX_STEP = 10;
-	const float MAX_DISTANCE = 2;
-	const float EPSILON = 1e-6;
-	auto CircleSDF = [](auto x, auto y, auto cx, auto cy, auto r) {
-		auto ux = x - cx;
-		auto uy = y - cy;
-		return std::sqrt(ux*ux + uy * uy) - r;
-	};
-	float t = 0;
-	for (size_t i = 0; i < MAX_STEP && t < MAX_DISTANCE; ++i) {
-		float sd = CircleSDF(x + dx * t, y + dy * t, 0.5f, 0.5f, 0.1f);
-		if (sd < EPSILON) {
-			return 2;
-		}
-		t += sd;
-	}
-	return 0;
-}
-
-auto engine = std::default_random_engine();
-template<size_t N>
-float Sample(float x, float y) {
-	float sum = 0;
-	auto dist = std::uniform_real_distribution<float>(0, 1);
-	for (size_t i = 0; i < N; ++i) {
-		//auto a = TOW_PI * (i + dist(engine)) / N;
-		//auto a = TOW_PI * i / N;
-		auto a = TOW_PI * dist(engine);
-		sum += Trace(x, y, std::cos(a), std::sin(a));
-	}
-	return sum / N;
-}
+#include "../Light/Light.h"
 
 int main(int argc, char* argv[])
 {
@@ -56,43 +18,38 @@ int main(int argc, char* argv[])
 	}
 	size_t w = std::stoi(argv[1]);
 	size_t h = std::stoi(argv[2]);
+	float w_r = 1.0f / w;
+	float h_r = 1.0f / h;
+	auto circle = lpq::CircleSDF(0.5f, 0.5f, 0.1f);
+	auto trace = lpq::Trace<float>(circle);
 	lpq::Image<lpq::RGB> img(w, h);
+	//auto Sample = lpq::FStratifiedSample(64, trace);
+	auto Sample = lpq::FJitteredSample(64, trace);
+	//auto Sample = lpq::FUniformSample(64, trace);
+
 	auto start = std::chrono::high_resolution_clock::now();
-
-	auto interval_line = [&](auto interval, auto offset) {
-		return [&]() {
-			for (size_t y = offset; y < h; y += interval) {
-				for (size_t x = 0; x < w; ++x) {
-					auto& pic = img.At(x, y);
-					auto light = static_cast<unsigned char>(std::min(Sample<64>((float)x / w, (float)y / h) * 255.0f, 255.0f));
-					pic.r = light;
-					pic.g = light;
-					pic.b = light;
-					//pic.a = 255;
-				}
-			}
-		};
-	};
-	std::vector<std::thread> threads;
-	for (int i = 0; i < 8; ++i) {
-		threads.emplace_back(interval_line(8, i));
+	auto last = start;
+	for (size_t i = 0; i < img.GetHeight(); ++i) {
+		auto step = std::chrono::high_resolution_clock::now();
+		auto diff = step - last;
+		auto ratio = static_cast<float>(i) * 100 * h_r;
+		auto remain = diff * (h - i);
+		std::cout <<"\r"<< ratio << "%\t" << "elapse:" << std::chrono::duration_cast<std::chrono::milliseconds>(step - start).count() * 1e-3
+			<< "s\t\tremain:" << std::chrono::duration_cast<std::chrono::milliseconds>(remain).count() * 1e-3 << "s.";
+		last = step;
+		for (size_t j = 0; j < img.GetWidth(); ++j) {
+			auto& pic = img.At(i, j);
+			auto x = i * h_r;
+			auto y = j * w_r;
+			auto light = Sample(x, y) * 255;
+			auto rgb = static_cast<unsigned char>(light);
+			pic.r = rgb;
+			pic.g = rgb;
+			pic.b = rgb;
+		}
 	}
-	for (int i = 0; i < 8; ++i) {
-		threads[i].join();
-	}
-
-	//for (size_t y = 0; y < h; ++y) {
-	//	for (size_t x = 0; x < w; ++x) {
-	//		auto& pic = img.At(x, y);
-	//		auto light = static_cast<unsigned char>(std::min(Sample<64>((float)x / w, (float)y / h) * 255.0f, 255.0f));
-	//		pic.r = light;
-	//		pic.g = light;
-	//		pic.b = light;
-	//		pic.a = 255;
-	//	}
-	//}
-
 	auto finish = std::chrono::high_resolution_clock::now();
+
 	std::cout << "Cost:" << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() / 1000.0 << "s." << std::endl;
 	lpq::SaveToPNG(argv[3], img);
 	return 0;
