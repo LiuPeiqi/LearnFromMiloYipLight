@@ -8,7 +8,9 @@
 #include <functional>
 
 #include "../PNG/pnglib.h"
-#include "../Light/Light.h"
+#include "../Light/Sample.h"
+#include "../Light/SDF.h"
+#include "../Light/Trace.h"
 
 int main(int argc, char* argv[])
 {
@@ -39,10 +41,7 @@ int main(int argc, char* argv[])
 		last = step;
 		for (size_t j = 0; j < img.GetWidth(); ++j) {
 			auto& pic = img.At(i, j);
-			auto x = i * h_r;
-			auto y = j * w_r;
-			auto light = Sample(x, y) * 255;
-			auto rgb = static_cast<unsigned char>(light);
+			auto rgb = static_cast<unsigned char>(Sample(i * h_r, j * w_r) * 255);
 			pic.r = rgb;
 			pic.g = rgb;
 			pic.b = rgb;

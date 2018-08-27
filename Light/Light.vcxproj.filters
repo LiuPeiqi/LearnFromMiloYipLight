@@ -15,7 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Light.h">
+    <ClInclude Include="SDF.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Sample.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Trace.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

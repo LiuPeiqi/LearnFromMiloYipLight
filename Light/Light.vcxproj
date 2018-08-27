@@ -115,7 +115,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Light.h" />
+    <ClInclude Include="Sample.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SDF.h" />
+    <ClInclude Include="Trace.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
